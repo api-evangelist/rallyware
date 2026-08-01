@@ -1,0 +1,26 @@
+# Rallyware
+
+> Rallyware is an AI-powered sales performance and workforce enablement platform that guides distributed sellers, distributors, and field teams toward the next best action using real-time performance data, learning, gamification, and behavioral insights. Rallyware exposes open APIs, webhooks, and pre-built connectors to integrate with CRM, POS, WFM, inventory, HR, and enterprise systems, but its API is delivered to enterprise customers and is not published as a public developer portal.
+
+## Company
+- [Rallyware](https://www.rallyware.com/): Peak performance for every rep, everywhere — AI sales performance orchestration.
+- [About Us](https://www.rallyware.com/about-us): Company overview.
+- [Enterprise Platform](https://www.rallyware.com/solutions/enterprise-platform): Core enterprise enablement platform with open APIs and connectors.
+- [Learning & Development](https://www.rallyware.com/solutions/learning-development): AI learning management system.
+
+## Resources
+- [Blog](https://www.rallyware.com/blog): Articles on sales performance, enablement, and workforce development.
+- [Webinars](https://www.rallyware.com/webinars): Recorded and live sessions.
+- [Customer Stories](https://www.rallyware.com/customer-stories): Case studies.
+- [Demo Request](https://www.rallyware.com/demo-request): Request a platform demo (enterprise onboarding path).
+- [Contact](https://www.rallyware.com/contact): Contact and support.
+
+## Security & Legal
+- [Security](https://www.rallyware.com/security): Security posture — SOC 2 certified, GDPR and CCPA compliant.
+- [Privacy Policy](https://www.rallyware.com/privacy)
+- [Terms of Service](https://www.rallyware.com/terms)
+- [Whistleblower](https://www.rallyware.com/whistleblower)
+
+## Notes
+- No public developer portal, OpenAPI definition, or API reference is published; API access is provisioned to enterprise customers.
+- No public status page or /.well-known/ discovery documents were found (probed 2026-07-20).

@@ -1,0 +1,14 @@
+generated: '2026-07-20'
+method: searched
+probe: true
+source: https://www.rallyware.com/security
+url: https://www.rallyware.com/security
+certifications:
+- SOC 2
+- GDPR
+evidence:
+- source: https://www.rallyware.com/security
+  keywords:
+  - soc 2
+  - soc2
+  - gdpr

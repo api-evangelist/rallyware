@@ -1,7 +1,23 @@
 aid: rallyware
 name: Rallyware
-description: Rallyware is a company surfaced as a portfolio company of techstars and added to the API
-  Evangelist network as a stub for enrichment. This profile is a lead awaiting the enrichment pipeline.
+description: Rallyware is an AI-powered sales performance and workforce enablement platform that guides
+  distributed sellers, distributors, and field teams toward the next best action using real-time
+  performance data, adaptive learning, gamification, and behavioral insights. It replaces fragmented
+  enablement tools with a single orchestration system for large field and direct-selling organizations,
+  and offers open APIs, webhooks, and pre-built connectors for CRM, POS, WFM, inventory, and HR systems.
+  API access is provisioned to enterprise customers rather than published through a public developer portal.
+accessModel:
+  pricing: unknown
+  onboarding: unknown
+  trial: false
+  try_now: false
+  public: false
+  label: Unknown
+  confidence: low
+  source: []
+  generated: '2026-07-22'
+  method: derived
+image: https://www.rallyware.com/wp-content/uploads/2026/03/featured-image.png
 url: https://raw.githubusercontent.com/api-evangelist/rallyware/refs/heads/main/apis.yml
 x-type: company
 x-source: vc-portfolio
@@ -11,9 +27,16 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-20'
 tags:
 - Company
+- Sales Enablement
+- Workforce Enablement
+- Learning and Development
+- Performance Management
+- Gamification
+- Direct Selling
+- Enterprise Software
 apis: []
 maintainers:
 - FN: Kin Lane
@@ -22,4 +45,27 @@ maintainers:
   email: info@apis.io
 common:
 - type: Website
-  url: https://rallyware.com/
+  url: https://www.rallyware.com/
+- type: Blog
+  url: https://www.rallyware.com/blog
+- type: Support
+  url: https://www.rallyware.com/contact
+- type: TermsOfService
+  url: https://www.rallyware.com/terms
+- type: PrivacyPolicy
+  url: https://www.rallyware.com/privacy
+- type: Security
+  url: https://www.rallyware.com/security
+- type: Compliance
+  url: https://www.rallyware.com/security
+- type: TrustCenter
+  url: security/rallyware-trust-center.yml
+- type: DomainSecurity
+  url: security/rallyware-domain-security.yml
+- type: LLMsTxt
+  url: llms/rallyware-llms.txt
+x-enrichment:
+  date: '2026-07-20'
+  status: minimal
+  artifacts_added: 3
+  pass: local-v1
