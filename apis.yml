@@ -1,11 +1,17 @@
 aid: rallyware
 name: Rallyware
-description: Rallyware is an AI-powered sales performance and workforce enablement platform that guides
+description: >-
+  Rallyware is an AI-powered sales performance and workforce enablement platform that guides
   distributed sellers, distributors, and field teams toward the next best action using real-time
   performance data, adaptive learning, gamification, and behavioral insights. It replaces fragmented
   enablement tools with a single orchestration system for large field and direct-selling organizations,
-  and offers open APIs, webhooks, and pre-built connectors for CRM, POS, WFM, inventory, and HR systems.
-  API access is provisioned to enterprise customers rather than published through a public developer portal.
+  and markets open APIs and pre-built connectors for CRM, POS, WFM, inventory, and HR systems. Rallyware
+  runs a production REST API — JSON-LD/Hydra over API Platform, secured with OAuth2 — but does not
+  publish it. There is no developer portal, no API reference and no OpenAPI, and the API is deployed one
+  tenant per host and provisioned under an enterprise contract. The only public, machine-readable
+  description of that API is Rallyware's own React Native SDK on npm, which ships the API client, its
+  OAuth2 auth strategies, and an embeddable component library; the artifacts in this repository are
+  derived from it.
 accessModel:
   pricing: unknown
   onboarding: unknown
@@ -27,7 +33,7 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-20'
+modified: '2026-08-14'
 tags:
 - Company
 - Sales Enablement
@@ -37,13 +43,52 @@ tags:
 - Gamification
 - Direct Selling
 - Enterprise Software
-apis: []
+apis:
+- name: Rallyware Platform API
+  description: >-
+    The Rallyware tenant API — identity, task programs, tasks and task units, unit
+    results, badges and KPIs for a customer's field organization. A JSON-LD / Hydra
+    REST API on API Platform (Symfony), secured with OAuth2 bearer tokens issued at
+    /oauth/v2/token. Rallyware publishes no developer portal, no API reference and no
+    OpenAPI; this entry is profiled from Rallyware's own published React Native SDK,
+    which contains the complete client implementation. Deployed one tenant per host,
+    so the base URL is templated per customer and access is provisioned under an
+    enterprise contract.
+  humanURL: https://www.npmjs.com/package/@rallyware/sdk-react-native-components
+  baseURL: https://{tenant}.rallyware.com
+  baseURL_note: >-
+    Templated and correct as written. Rallyware runs one deployment per customer on
+    either a rallyware.com subdomain or a customer-branded domain; its own SDK
+    requires the host as a caller-supplied argument. There is no shared
+    api.rallyware.com. Resource paths sit under /api; the token endpoint is
+    /oauth/v2/token.
+  tags:
+  - Sales Enablement
+  - Workforce Enablement
+  - Learning and Development
+  - Performance Management
+  - Gamification
+  properties:
+  - type: Authentication
+    url: authentication/rallyware-authentication.yml
+  - type: Conventions
+    url: conventions/rallyware-conventions.yml
+  - type: DataModel
+    url: data-model/rallyware-data-model.yml
+  - type: ErrorCatalog
+    url: errors/rallyware-problem-types.yml
+  - type: Lifecycle
+    url: lifecycle/rallyware-lifecycle.yml
+  - type: RateLimits
+    url: rate-limits/rallyware-rate-limits.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: VulnerabilityDisclosure
+  url: security/rallyware-vulnerability-disclosure.yml
 - type: Website
   url: https://www.rallyware.com/
 - type: Blog
@@ -55,17 +100,64 @@ common:
 - type: PrivacyPolicy
   url: https://www.rallyware.com/privacy
 - type: Security
-  url: https://www.rallyware.com/security
+  url: https://www.rallyware.com/security-2
 - type: Compliance
-  url: https://www.rallyware.com/security
+  url: https://www.rallyware.com/security-2
 - type: TrustCenter
   url: security/rallyware-trust-center.yml
 - type: DomainSecurity
   url: security/rallyware-domain-security.yml
 - type: LLMsTxt
   url: llms/rallyware-llms.txt
+- type: GitHubOrganization
+  url: https://github.com/rallyware
+- type: Packages
+  url: packages/rallyware-packages.yml
+- type: SDKs
+  url: packages/rallyware-packages.yml
+- type: Components
+  url: components/rallyware-components.yml
+- type: Authentication
+  url: authentication/rallyware-authentication.yml
+- type: Conventions
+  url: conventions/rallyware-conventions.yml
+- type: DataModel
+  url: data-model/rallyware-data-model.yml
+- type: ErrorCatalog
+  url: errors/rallyware-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/rallyware-lifecycle.yml
+- type: Conformance
+  url: conformance/rallyware-conformance.yml
+- type: Plans
+  url: plans/rallyware-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/rallyware-rate-limits.yml
+- type: AgentSkill
+  url: skills/_index.yml
 x-enrichment:
-  date: '2026-07-20'
-  status: minimal
-  artifacts_added: 3
+  date: '2026-08-14'
+  status: enriched
+  artifacts_added: 16
   pass: local-v1
+x-coverage:
+  state: covered
+  reason: profiled-from-first-party-sdk
+  detail: >-
+    Rallyware publishes no developer portal, no API reference and no OpenAPI, and its
+    API is deployed one tenant per host with no anonymously reachable instance — but
+    the contract is not actually hidden: Rallyware's own React Native SDK on npm
+    (@rallyware/sdk-react-native-components@1.2.1) ships the complete API client, so
+    17 operations, the OAuth2 auth model, Hydra pagination conventions and 17 typed
+    entities were recovered first-party rather than recorded as an absence.
+  evidence:
+  - url: https://registry.npmjs.org/@rallyware/sdk-react-native-components
+    status: 200
+  - url: https://www.rallyware.com/security-2
+    status: 200
+  - url: https://www.rallyware.com/openapi.json
+    status: 404
+  - url: https://status.rallyware.com/
+    status: 200
+    note: 302s to an AWS Cognito login for the internal "rlw-internal" user pool.
+  checked: '2026-08-14'
