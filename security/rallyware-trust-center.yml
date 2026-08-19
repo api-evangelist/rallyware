@@ -1,14 +1,87 @@
-generated: '2026-07-20'
+generated: '2026-08-14'
 method: searched
 probe: true
-source: https://www.rallyware.com/security
-url: https://www.rallyware.com/security
+source: https://www.rallyware.com/security-2
+url: https://www.rallyware.com/security-2
+type: security posture page
+dedicated_trust_portal: false
+portal_note: >-
+  No trust.rallyware.com or security.rallyware.com exists (both fail to resolve,
+  probed 2026-08-14). What Rallyware publishes is a single narrative security page on
+  the marketing site — no document request flow, no downloadable report, no
+  subprocessor list, and no live control status.
+
 certifications:
 - SOC 2
 - GDPR
+
+certification_detail:
+- name: SOC 2
+  claim_text: >-
+    "Our approach is based on the five SOC 2 Trust Service Criteria: security,
+    availability, processing integrity, confidentiality and privacy."
+  attestation_claimed: false
+  caveat: >-
+    Framed as the framework their approach is BASED ON. Rallyware does not claim a
+    completed Type I or Type II attestation, does not name an auditing firm, does not
+    state a report period, and offers no path to request the report. Record as
+    published posture, not verified certification.
+- name: GDPR
+  claim_text: >-
+    No explicit GDPR compliance statement appears on the security page. The signal is
+    implementation-side: the site runs a GDPR cookie-consent implementation and
+    publishes a privacy policy, and the API data model carries a GDPR erasure marker
+    (UserProfile.deletion_requested_at) plus tenant-configurable privacy and cookie
+    policy pages.
+  attestation_claimed: false
+
+not_claimed:
+- ISO 27001
+- ISO 27017
+- ISO 27018
+- PCI DSS
+- HIPAA
+- FedRAMP
+- CSA STAR
+- FIPS 140
+
+programs:
+- name: Information Security Management System (ISMS)
+  detail: Documented, updated annually, reviewed through internal and external audits.
+- name: Independent penetration testing
+  detail: Conducted annually.
+- name: Bug Bounty Program
+  detail: See security/rallyware-vulnerability-disclosure.yml.
+- name: Business continuity / disaster recovery
+  detail: >-
+    BCP and DRP developed and regularly tested, covering pandemic, crisis
+    communication and disaster recovery scenarios.
+- name: Personnel security and training
+  detail: Security-culture and training program stated.
+
+infrastructure:
+  cloud: AWS
+  detail: >-
+    "Rallyware's infrastructure is built on AWS, following established security best
+    practices. Each service is designed and maintained with reliability and data
+    protection requirements in mind. Project environments are isolated."
+  corroboration: >-
+    Independently consistent with observed operations — the internal status page is
+    fronted by AWS Cognito (eu-central-1) and the public github.com/rallyware org
+    consists entirely of AWS Terraform modules (EKS, MWAA, SQS, Cognito, VPC, RDS).
+
 evidence:
-- source: https://www.rallyware.com/security
+- source: https://www.rallyware.com/security-2
+  http_status: 200
   keywords:
   - soc 2
-  - soc2
   - gdpr
+  - isms
+  - penetration testing
+  - bug bounty
+  - business continuity
+- source: https://trust.rallyware.com/
+  result: does not resolve
+- source: https://www.rallyware.com/security
+  http_status: 200
+  note: 302 redirect to /security-2, which is the canonical page.

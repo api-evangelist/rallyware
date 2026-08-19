@@ -1,0 +1,156 @@
+generated: '2026-08-14'
+method: derived
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 (first-party SDK) and
+  https://www.rallyware.com/security-2 (published security posture)
+note: >-
+  Standards conformance of the Rallyware tenant API. Derived from Rallyware's own
+  published SDK plus its published security page. Rallyware makes no explicit
+  standards-conformance claim anywhere, so every `conforms: true` below rests on
+  observable implementation evidence, not on a vendor assertion.
+
+standards:
+
+- id: oauth2
+  name: OAuth 2.0 (RFC 6749)
+  conforms: true
+  evidence: >-
+    Token endpoint /oauth/v2/token implementing the resource-owner password
+    credentials grant (grant_type=password) and the refresh-token grant
+    (grant_type=refresh_token), returning access_token + refresh_token. Read from
+    lib/module/auth/default-auth-strategy.js and refresh-token-auth-strategy.js.
+  caveat: >-
+    Uses only the password grant, which RFC 6749 §4.3 discourages and OAuth 2.1
+    removes. No authorization_code, no PKCE, no client_credentials.
+
+- id: rfc6750-bearer
+  name: OAuth 2.0 Bearer Token Usage (RFC 6750)
+  conforms: true
+  evidence: >-
+    "Authorization: Bearer {access_token}" on every authenticated request; 401
+    triggers re-authentication. lib/module/services/rallyware-api-service.js.
+
+- id: rfc8414-as-metadata
+  name: OAuth 2.0 Authorization Server Metadata (RFC 8414)
+  conforms: false
+  evidence: /.well-known/oauth-authorization-server returns 404 (probed 2026-08-14).
+
+- id: oidc
+  name: OpenID Connect Core / Discovery
+  conforms: false
+  evidence: >-
+    /.well-known/openid-configuration returns 404. No id_token is issued. Enterprise
+    SSO is brokered by a proprietary server-side exchange (/sdk/okta_login) rather
+    than by OIDC federation.
+
+- id: json-ld
+  name: JSON-LD 1.1 (W3C)
+  conforms: true
+  evidence: >-
+    Collection responses are JSON-LD documents and relationships are expressed as
+    IRIs in request bodies (user_task: "/api/user_tasks/{id}").
+    lib/module/models/collection-response.js, lib/module/services/task-service.js.
+
+- id: hydra-core
+  name: Hydra Core Vocabulary (W3C Hydra CG)
+  conforms: true
+  evidence: >-
+    Collections carry hydra:member, hydra:totalItems and hydra:view.hydra:next, which
+    is the Hydra PartialCollectionView pagination contract, consumed directly by the
+    SDK's CollectionResponse model.
+  note: >-
+    Together with the /api/ prefix and the /oauth/v2/ auth path this identifies the
+    backend as API Platform on Symfony. API Platform can emit an OpenAPI document at
+    /api/docs.json out of the box — Rallyware either disables it or gates it behind
+    tenant auth. No Rallyware tenant host answered that path anonymously
+    (probed 2026-08-14).
+
+- id: rfc9457-problem-details
+  name: Problem Details for HTTP APIs (RFC 9457 / RFC 7807)
+  conforms: false
+  evidence: >-
+    No application/problem+json handling in the SDK and no published error schema.
+    See errors/rallyware-problem-types.yml.
+
+- id: rfc8594-sunset
+  name: Sunset HTTP Header (RFC 8594)
+  conforms: false
+  evidence: No deprecation or sunset policy published; no Sunset/Deprecation header handling in the SDK.
+
+- id: rfc9116-security-txt
+  name: security.txt (RFC 9116)
+  conforms: false
+  evidence: >-
+    /.well-known/security.txt returns 404 despite an operating bug bounty program
+    with a published contact address. See well-known/rallyware-well-known.yml.
+
+- id: ietf-ratelimit-headers
+  name: RateLimit header fields for HTTP
+  conforms: false
+  evidence: No rate-limit headers documented or handled. See rate-limits/rallyware-rate-limits.yml.
+
+- id: idempotency-key
+  name: Idempotency-Key header (IETF draft)
+  conforms: false
+  evidence: >-
+    No idempotency key on any state-changing operation. See
+    conventions/rallyware-conventions.yml.
+
+- id: openapi
+  name: OpenAPI Specification
+  conforms: false
+  evidence: >-
+    No OpenAPI/Swagger document is published at any Rallyware host. Probed
+    /openapi.json, /openapi.yaml, /swagger.json, /api-docs, /v1/openapi.json, /redoc
+    on www.rallyware.com (all 404) and /api/docs.json, /api/docs.jsonld on every
+    reachable tenant host (2026-08-14).
+
+- id: asyncapi
+  name: AsyncAPI
+  conforms: false
+  applicable: false
+  evidence: >-
+    No event, streaming or webhook surface is documented anywhere on Rallyware's
+    public properties. Not penalized — there is no event surface to specify.
+
+- id: a2a
+  name: A2A Agent Card
+  conforms: false
+  evidence: /.well-known/agent-card.json and /.well-known/agent.json both 404 (probed 2026-08-14).
+
+- id: mcp
+  name: Model Context Protocol
+  conforms: false
+  evidence: No MCP server published. See mcp/rallyware-mcp.yml.
+
+- id: gdpr
+  name: GDPR
+  conforms: partial
+  evidence: >-
+    The API model carries a GDPR erasure marker — UserProfileDto.deletion_requested_at
+    — and the tenant PublicConfig exposes privacy_policy and cookie_policy static
+    pages by well-known parameter key. Rallyware's site publishes a GDPR cookie
+    consent implementation and a privacy policy. Rallyware does not make an explicit
+    GDPR compliance statement on its security page.
+
+compliance_program:
+  published: true
+  source: https://www.rallyware.com/security-2
+  certifications:
+  - name: SOC 2
+    detail: >-
+      "Our approach is based on the five SOC 2 Trust Service Criteria: security,
+      availability, processing integrity, confidentiality and privacy."
+    caveat: >-
+      Stated as the framework their approach is BASED ON. The page does not claim a
+      completed Type I or Type II attestation, name an auditor, or offer a report on
+      request, and Rallyware runs no trust portal. Recorded as a published posture,
+      not a verified certification.
+  practices:
+  - Information Security Management System (ISMS), updated annually
+  - Internal and external audits
+  - Annual independent penetration testing
+  - Bug bounty program (see security/rallyware-vulnerability-disclosure.yml)
+  - Business continuity and disaster recovery plans, regularly tested
+  - Infrastructure on AWS with isolated per-project environments
+  not_claimed: [ISO 27001, ISO 27017, ISO 27018, PCI DSS, HIPAA, FedRAMP, CSA STAR, FIPS 140]

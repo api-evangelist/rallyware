@@ -1,0 +1,99 @@
+generated: '2026-08-14'
+method: searched
+source: >-
+  Live probes of Rallyware hosts plus npm @rallyware/sdk-react-native-components@1.2.1
+note: >-
+  Rallyware publishes no versioning policy, no deprecation policy, no SLA and no
+  public status page. Everything below is either an observed implementation fact from
+  the first-party SDK or a recorded absence. No StatusPage and no Deprecation pointer
+  is emitted in apis.yml, because neither surface is publicly available.
+
+versioning:
+  scheme: none
+  current: null
+  detail: >-
+    API resource paths carry no version segment — /api/users/me, /api/badges,
+    /api/user_tasks/{id}. The only versioned path is the OAuth token endpoint
+    /oauth/v2/token, which versions the Symfony auth bundle rather than the API
+    contract. There is no version header, no version media type and no date-based
+    version train.
+  client_version_signal:
+    header: Rallyware-Data-SDK-Version
+    note: >-
+      The nearest thing to version negotiation: clients declare their SDK version to
+      the server on every request. This lets Rallyware vary behaviour by client
+      version, but gives the client no way to pin an API version.
+  docs: null
+
+deprecation:
+  policy_url: null
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  evidence: >-
+    No deprecation or sunset policy is published on any Rallyware property, and the
+    SDK contains no handling for Sunset (RFC 8594) or Deprecation headers.
+  observed_deprecations:
+  - surface: Myagi API
+    detail: >-
+      Myagi, acquired by Rallyware and still marketed as "Myagi by Rallyware", had a
+      developer surface on myagi.com. Every myagi.com hostname — including
+      api.myagi.com and developers.myagi.com — now returns 301 to the Branch deep
+      link https://rallyware.app.link. The API was retired by redirect, with no
+      sunset notice, no migration guide and no archived documentation.
+      Probed 2026-08-14.
+  - surface: docs.rallyware.com
+    detail: >-
+      Still CNAMEd to rallyware.helpscoutdocs.com, but the TLS handshake fails and
+      the Help Scout origin returns 404. A dangling documentation host.
+      Probed 2026-08-14.
+
+sla:
+  url: null
+  uptime_target: null
+  published: false
+  note: >-
+    No SLA or uptime commitment is published. The security page describes tested
+    business-continuity and disaster-recovery plans but states no availability target.
+
+status_page:
+  url: https://status.rallyware.com/
+  public: false
+  http_status: 200
+  gated: true
+  gate: >-
+    Every request 302s to an AWS Cognito hosted UI at
+    rlw-internal-odin.auth.eu-central-1.amazoncognito.com. The Cognito client is named
+    "rlw-internal", so this is an internal operations dashboard, not a customer status
+    page.
+  probed: '2026-08-14'
+  note: >-
+    Deliberately NOT wired as a `type: StatusPage` pointer. The pointer asserts the
+    provider publishes a status page a consumer can read; this one cannot be read
+    without Rallyware credentials. Making this host anonymously readable would be a
+    one-configuration-change win for Rallyware — the page already exists.
+
+changelog:
+  published: false
+  note: >-
+    No dated product or API changelog is published. The only release history
+    Rallyware exposes is the npm version history of its React Native SDK (54
+    releases, 2022-05-02 to 2024-05-23) — captured in
+    packages/rallyware-packages.yml rather than as a ChangeLog artifact, because it
+    tracks the client library, not the API.
+
+deprecated_operations: []
+
+support:
+  channel: https://www.rallyware.com/contact
+  security_contact: ops@rallyware.com
+  note: >-
+    No developer-specific support channel, forum or community exists. API support is
+    delivered through the enterprise account relationship.
+
+lifecycle_stage:
+  api: production, private
+  detail: >-
+    The API is in production — it backs Rallyware's own mobile SDK and its enterprise
+    connector product — but is provisioned per customer rather than published. There
+    is no self-service signup, no sandbox and no public reference.

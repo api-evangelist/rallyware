@@ -1,0 +1,207 @@
+generated: '2026-08-14'
+method: searched
+source: https://www.npmjs.com/package/@rallyware/sdk-react-native-components
+package: "@rallyware/sdk-react-native-components"
+version: 1.2.1
+published: '2024-05-23'
+note: >-
+  Rallyware ships an embeddable client-side component library — a React Native
+  element library that renders live Rallyware data (tasks, programs, badges, KPIs,
+  user header, terms acceptance) inside a customer's own mobile application. This is
+  the "embedded Rallyware" distribution model: rather than sending the customer to a
+  Rallyware-branded app, the customer embeds Rallyware surfaces into their existing
+  field/distributor app. Distinct from a server-side SDK — every component is bound
+  to a live RallywareAPIService instance and fetches from the tenant API itself.
+  All names, props and defaults below are read verbatim from the published README
+  and TypeScript declarations.
+
+platform:
+  framework: React Native
+  web_support: true
+  web_support_note: react-native-web is a declared dependency, so components render on web.
+  peer_dependencies: [react, react-native]
+
+loader:
+  service: RallywareAPIService
+  hook: useRallywareAPIService(host, authStrategy, langCode)
+  required_prop: >-
+    Every component takes `apiService` — an initialized RallywareAPIService instance.
+    Components do not accept raw data; they fetch it themselves.
+  auth_strategies: [DefaultAuthStrategy, RefreshTokenAuthStrategy, NuskinOktaAuthStrategy]
+  detail: authentication/rallyware-authentication.yml
+
+theming:
+  service: themeService
+  method: themeService.setParams({...})
+  scope: global — applies to every component in the library
+  token_families:
+  - name: color
+    tokens:
+    - surfaceColor
+    - surfaceSuccess
+    - textColor
+    - textMutedColor
+    - textSubtleColor
+    - textWarningColor
+    - textErrorColor
+    - borderColor
+    - secondaryColor
+    - secondary050Color
+    - secondary100Color
+    - neutral050Color
+    - neutral100Color
+    - success500Color
+    - skeletonColor
+  - name: typography
+    tokens: [fontFamilyRegular, fontFamilyBold]
+  - name: type-scale
+    tokens: >-
+      h1/h1Subtle/h2/h2Subtle/h3/h3Subtle/h4/h5/h6, body1, body1Bold, body2,
+      body2Bold, caption, captionBold, mini, userHeaderLine1, userHeaderLine2 —
+      each with a *Size and a *LineHeight/*Height token
+  note: >-
+    A genuine design-token surface, which is what makes white-label embedding the
+    point of this library rather than a side effect.
+
+families:
+
+- family: Performance & progress
+  components:
+  - name: ProgressTrackerWidget
+    label: Task Program Progress Widget
+    required_props: [apiService]
+    optional_props:
+    - title
+    - description
+    - boxBorderRadius
+    - itemIconBoxBorderRadius
+    - progressbarBorderRadius
+    backing_operations: [listMyTaskPrograms]
+  - name: UserInfoWidget
+    label: User Header Component
+    required_props: [apiService]
+    optional_props:
+    - showHeader
+    - showTooltip
+    - boxBackgroundColor
+    - avatarBorderRadius
+    - kpiInfoItemBorderRadius
+    - tooltipBorderRadius
+    backing_operations: [getCurrentUser, getMyProfile]
+
+- family: Tasks & programs
+  components:
+  - name: ProgramList
+    required_props: [apiService]
+    optional_props:
+    - horizontal
+    - boxBorderRadius
+    - itemIconBoxBorderRadius
+    - progressbarBorderRadius
+    - onItemPress
+    backing_operations: [listMyTaskPrograms]
+  - name: TaskProgram
+    description: Renders one program (image, title, description) and its related tasks.
+    required_props: [apiService, programId]
+    optional_props:
+    - imageBorderRadius
+    - cardBoxBorderRadius
+    - tagBorderRadius
+    - cardsVerticalGap
+    - yourTasksTitle
+    - showDivider
+    - showLockedTasks
+    - onActionButtonPress
+    backing_operations: [getTaskProgram, listAvailableTasks]
+  - name: TaskCardCarousel
+    required_props: [apiService, onActionButtonPress]
+    optional_props:
+    - showLockedTasks
+    - showOnlyFeatured
+    - taskProgramId
+    - status
+    - programsCount
+    - cardBoxBorderRadius
+    - tagBorderRadius
+    - cardsGap
+    filter_enum: UserTaskStatusesEnum
+    backing_operations: [listAvailableTasks]
+  - name: TaskComponent
+    label: Task execution surface
+    required_props: [apiService, userTaskId, onComplete]
+    optional_props: [taskStatusBar, onError]
+    backing_operations:
+    - getUserTask
+    - startUserTask
+    - saveUnitResultDraft
+    - submitUnitResult
+    - completeUserTask
+    note: >-
+      The only component that writes. It drives the whole unit draft/submit/complete
+      lifecycle described in data-model/rallyware-data-model.yml.
+
+- family: Gamification
+  components:
+  - name: BadgesWidget
+    required_props: [apiService]
+    optional_props:
+    - itemIconBoxBorderRadius
+    - modalBorderRadius
+    - seeAllButtonText
+    - badgesCount
+    - onBadgesPdfPress
+    - onShowMoreUsersPress
+    - onSeeAllButtonPress
+    backing_operations: [listBadges]
+  - name: BadgesList
+    description: >-
+      Full locked + unlocked badge list with infinite-scroll pagination. Scrollable —
+      must be used inside a non-scrollable view.
+    required_props: [apiService]
+    optional_props:
+    - imageBorderRadius (default 32)
+    - isBackButtonVisible (default true)
+    - backButtonText (default "Back")
+    - height (default "100%")
+    - onBackPress
+    - onItemPress
+    backing_operations: [listBadges]
+  - name: BadgeAchieversList
+    description: Users who earned a specific badge, infinite-scroll paginated.
+    required_props: [apiService, badgeId]
+    optional_props:
+    - imageBorderRadius (default 20)
+    - isBackButtonVisible (default true)
+    - backButtonText (default "Back")
+    - height (default "100%")
+    - onBackPress
+    - onItemPress
+    backing_operations: [listBadgeAchievers]
+
+- family: Compliance & consent
+  components:
+  - name: TermsAndConditions
+    required_props: [apiService]
+    optional_props: [height, headerText]
+    backing_operations: [getPublicConfig, getMyProfile, agreeRules]
+    note: >-
+      Renders the tenant's terms static page (resolved from PublicConfig parameter
+      core.security.static_page.terms_of_service) and drives the rules-acceptance
+      gate — isRulesAgreed() / agreeRules().
+
+test_fixtures:
+  exported: [userInfoWidgetTestData, badgesWidgetTestData]
+  note: >-
+    Rallyware exports named demo datasets alongside two widgets so they can be
+    rendered without a live tenant. This is the closest thing to a sandbox Rallyware
+    publishes — it is offline fixture data, not a callable test environment, so no
+    sandbox/ artifact is emitted.
+
+coverage:
+  component_count: 10
+  families: 4
+  writes: 1
+  note: >-
+    Read-only except TaskComponent and the TermsAndConditions consent action. The
+    library covers the field-user (distributor/associate) experience only; no admin,
+    reporting or content-authoring components are published.

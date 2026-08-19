@@ -1,0 +1,99 @@
+generated: '2026-08-14'
+method: derived
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 —
+  lib/module/services/rallyware-api-service.js and lib/typescript/enums/*.d.ts
+format: none
+note: >-
+  PARTIAL BY NECESSITY. Rallyware publishes no error reference, no error-code
+  registry and no OpenAPI, so there are no 4xx/5xx response definitions to derive a
+  full catalogue from. What follows is the complete set of error and failure
+  semantics that Rallyware's own published SDK actually implements or declares —
+  one HTTP status with defined client behaviour, plus the two domain-level failure
+  taxonomies carried in the typed DTOs. Recorded so the gap is measurable rather
+  than invisible; nothing here is inferred beyond the published source.
+
+envelope:
+  documented: false
+  content_type: application/json (assumed; not declared)
+  problem_json: false
+  observed: >-
+    The SDK's response interceptor logs error.response.data and branches only on
+    error.response.status. No field names, no error code, no type URI, and no
+    machine-readable shape are published for the error body.
+
+http_problems:
+- status: 401
+  title: Unauthorized / access token expired
+  behaviour: >-
+    The only HTTP status with a defined contract. On 401, if a refresh_token is held
+    and the request has not already been retried, the SDK exchanges the refresh token
+    at /oauth/v2/token and replays the original request exactly once (guarded by a
+    _retry flag). If the refresh fails, all auth state is cleared and the error
+    propagates.
+  retryable: true
+  retry_strategy: single replay after token refresh
+  source_operation: lib/module/services/rallyware-api-service.js#interceptors.response
+
+undocumented_statuses:
+  note: >-
+    The SDK has no handling for any of these; they fall through the interceptor to
+    the caller with no typed shape. Their absence from the client is itself the
+    finding.
+  statuses: [400, 403, 404, 409, 422, 429, 500, 502, 503]
+
+domain_failures:
+  note: >-
+    Rallyware models failure primarily as domain state on the resource rather than as
+    an HTTP error. These enums ARE published, in the SDK's TypeScript declarations,
+    and are the closest thing to an error registry the company ships.
+  taxonomies:
+
+  - name: TaskFailReasonEnum
+    field: UserTask.fail_reason
+    values:
+    - code: business_rule
+      meaning: The task failed a tenant-configured business rule.
+    - code: expired
+      meaning: The task passed its due_date before completion.
+    - code: rejected
+      meaning: A submitted result was rejected by a reviewer.
+    - code: ""
+      meaning: No failure. The empty string is the "none" member of the enum.
+    source: lib/typescript/enums/task-fail-reason.enum.d.ts
+
+  - name: UnitResultStatusesEnum
+    field: UnitResult.status
+    values:
+    - code: new
+      meaning: Not yet started.
+    - code: draft
+      meaning: Saved via save_draft, not submitted.
+    - code: in_review
+      meaning: Submitted and awaiting reviewer decision. (Declared as PENDING.)
+    - code: rejected
+      meaning: Reviewer rejected the submission; the user must resubmit.
+    - code: approved
+      meaning: Reviewer approved the submission.
+    source: lib/typescript/enums/unit-result-statuses.enum.d.ts
+
+  - name: UserTaskStatusesEnum
+    field: UserTask.status
+    values: [locked, available, in_progress, completed, failed]
+    note: >-
+      `locked` is annotated in Rallyware's source as "synthetic status. I hope it
+      will be implemented one day" — it is computed client-side and never returned by
+      the API, so a client that trusts this enum against raw API output will not
+      observe it.
+    source: lib/typescript/enums/user-task-statuses.enum.d.ts
+
+coverage:
+  http_problems: 1
+  domain_failure_taxonomies: 3
+  completeness: partial
+  gap: >-
+    No published error reference. An integrator cannot determine in advance what a
+    400, 403, 404, 422 or 429 from this API looks like, what error codes exist, or
+    which failures are retryable. Publishing an error reference — or simply enabling
+    the RFC 9457 problem+json output that API Platform supports natively — is the
+    highest-value documentation fix available here after publishing an OpenAPI.

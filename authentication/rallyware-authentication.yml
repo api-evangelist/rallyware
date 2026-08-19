@@ -1,0 +1,133 @@
+generated: '2026-08-14'
+method: derived
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 — lib/module/auth/*.js and
+  lib/module/services/rallyware-api-service.js (first-party, published by Rallyware)
+docs: https://www.npmjs.com/package/@rallyware/sdk-react-native-components
+note: >-
+  Rallyware publishes no developer portal and no OpenAPI. This profile is derived
+  from Rallyware's own published React Native SDK, which contains the complete
+  authentication implementation for the Rallyware tenant API. Every scheme, URL,
+  grant and header below is read verbatim out of that package — nothing is inferred
+  or invented. OWNERSHIP: the package is under the @rallyware npm scope, its
+  repository is github.com/rallyware/sdk-react-native-components, its npm author is
+  "rallyware", and its README names Rallyware-operated hosts, so the contract
+  belongs to this company.
+
+summary:
+  types: [oauth2, http]
+  api_key_in: []
+  oauth2_flows: [password, refreshToken]
+  bearer: true
+  mtls: false
+  openid_connect: false
+  discovery_document: none
+  scopes_published: false
+
+schemes:
+- name: OAuth2Password
+  type: oauth2
+  flow: password
+  token_url: /oauth/v2/token
+  token_url_note: >-
+    Relative to the tenant host. Absolute form is
+    https://{tenant}.rallyware.com/oauth/v2/token. The /oauth/v2/ path is the
+    signature of Symfony FOSOAuthServerBundle.
+  request_body:
+    grant_type: password
+    username: end-user login (email)
+    password: end-user password
+  response_body:
+    access_token: bearer token
+    refresh_token: token for the refresh_token grant
+    is_activated: boolean — whether the user account is approved
+    is_email_verified: boolean — whether the user email is verified
+  source: lib/module/auth/default-auth-strategy.js
+  sources: ['@rallyware/sdk-react-native-components@1.2.1']
+
+- name: OAuth2RefreshToken
+  type: oauth2
+  flow: refreshToken
+  token_url: /oauth/v2/token
+  request_body:
+    grant_type: refresh_token
+    refresh_token: the refresh_token from a prior grant
+  source: lib/module/auth/refresh-token-auth-strategy.js
+  sources: ['@rallyware/sdk-react-native-components@1.2.1']
+
+- name: BearerToken
+  type: http
+  scheme: bearer
+  in: header
+  parameter_name: Authorization
+  format: "Bearer {access_token}"
+  description: >-
+    Every authenticated call carries the access_token from /oauth/v2/token as a
+    bearer token. Set on axios.defaults.headers.common.Authorization.
+  source: lib/module/services/rallyware-api-service.js (setAuthData)
+  sources: ['@rallyware/sdk-react-native-components@1.2.1']
+
+- name: TenantSSOExchange
+  type: oauth2
+  flow: tokenExchange
+  token_url: /sdk/okta_login
+  description: >-
+    A tenant-specific SSO token-exchange endpoint. The SDK ships one concrete
+    implementation, NuskinOktaAuthStrategy, which POSTs {okta_token} to
+    /sdk/okta_login and receives the same access_token/refresh_token envelope as the
+    password grant. This confirms Rallyware supports per-customer enterprise SSO
+    federation into its API, brokered server-side rather than via standard OIDC.
+    Rallyware publishes no generic/documented form of this endpoint — the Nu Skin
+    strategy is the only published example.
+  request_body:
+    okta_token: an Okta-issued token obtained by the host application
+  source: lib/module/auth/nuskin-okta-auth-strategy.js
+  sources: ['@rallyware/sdk-react-native-components@1.2.1']
+
+token_lifecycle:
+  refresh_trigger: >-
+    HTTP 401 on any authenticated request. The SDK's axios response interceptor
+    retries the original request exactly once after exchanging the refresh_token; if
+    the refresh also fails, all auth state is cleared and the error is rejected.
+  retry_guard: _retry flag on the axios request config (single retry, no loop)
+  source: lib/module/services/rallyware-api-service.js (interceptors.response)
+
+authorization_gates:
+  description: >-
+    Beyond token validity, the SDK treats the API as unavailable unless the
+    authenticated principal passes two account-state gates returned by the token
+    response.
+  gates:
+  - field: is_activated
+    meaning: the user account has been approved by the tenant administrator
+  - field: is_email_verified
+    meaning: the user email address has been verified
+  computed_as: isInitialized && accessToken && refreshToken && isUserApproved && isUserEmailVerified
+
+anonymous_endpoints:
+  description: >-
+    Two endpoints are called before authentication and require no token.
+  endpoints:
+  - GET /api/public/config
+  - GET /api/public/translation/catalogue/{langCode}
+  note: >-
+    Both are tenant-scoped and were NOT anonymously reachable from the public
+    internet during this pass — no Rallyware tenant host answers to an unauthenticated
+    caller (see x-coverage in apis.yml).
+
+scopes:
+  published: false
+  note: >-
+    The password grant is issued without a scope parameter and no scope or permission
+    reference is published anywhere. Authorization is enforced by tenant role and
+    account state, not by OAuth scopes, so no scopes/ artifact is emitted rather
+    than an empty one.
+
+gaps:
+- No /.well-known/oauth-authorization-server (RFC 8414) metadata is served.
+- No /.well-known/openid-configuration is served; this is OAuth2 only, not OIDC.
+- No client_credentials or authorization_code grant is published — the only grants
+  Rallyware documents are resource-owner password credentials and refresh_token.
+  RFC 6749 §4.3 discourages the password grant and OAuth 2.1 removes it entirely.
+- No public documentation of client_id/client_secret registration for the token
+  endpoint; the SDK omits them, implying a public client per tenant.

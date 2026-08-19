@@ -1,26 +1,62 @@
 # Rallyware
 
-> Rallyware is an AI-powered sales performance and workforce enablement platform that guides distributed sellers, distributors, and field teams toward the next best action using real-time performance data, learning, gamification, and behavioral insights. Rallyware exposes open APIs, webhooks, and pre-built connectors to integrate with CRM, POS, WFM, inventory, HR, and enterprise systems, but its API is delivered to enterprise customers and is not published as a public developer portal.
+> Rallyware is an AI-powered sales performance and workforce enablement platform that guides distributed sellers, distributors and field teams toward the next best action using real-time performance data, adaptive learning, gamification and behavioral insights. Rallyware runs a real production REST API, but does not publish it: there is no developer portal, no API reference and no OpenAPI. The API is deployed one tenant per host and provisioned through an enterprise contract. Everything machine-readable that IS public comes from Rallyware's own React Native SDK on npm, which contains the complete client for the tenant API.
+
+## What Rallyware actually publishes for developers
+
+- [@rallyware/sdk-react-native-components](https://www.npmjs.com/package/@rallyware/sdk-react-native-components): The only first-party client library, and the only public description of the Rallyware API. Ships RallywareAPIService (the HTTP client and its OAuth2 auth strategies) plus 10 embeddable React Native UI components. Latest 1.2.1, published 2024-05-23.
+- [github.com/rallyware](https://github.com/rallyware): 18 public repositories, all Terraform infrastructure modules (AWS EKS, MWAA, Cognito, SQS, VPC, ArgoCD). No API artifacts.
+- [Security](https://www.rallyware.com/security-2): SOC 2 Trust Service Criteria posture, ISMS, annual penetration testing, and a self-run Bug Bounty Program. Vulnerability reports go to ops@rallyware.com.
+
+## The API, as derived from the first-party SDK
+
+Base URL is templated per customer: `https://{tenant}.rallyware.com`. There is no shared api.rallyware.com. Resource paths sit under `/api`; the OAuth token endpoint is `/oauth/v2/token`. The backend is API Platform on Symfony — collections are JSON-LD / Hydra documents.
+
+- Authentication: OAuth2 resource-owner password grant + refresh_token, bearer tokens, plus a per-tenant SSO token exchange (`/sdk/okta_login`). No client_credentials grant, no OIDC, no scopes, no RFC 8414 metadata. See `authentication/rallyware-authentication.yml`.
+- Conventions: Hydra `hydra:member`/`hydra:view.hydra:next`/`hydra:totalItems` pagination, `_locale` query param on every request, required `Rallyware-Data-Client-Device-Platform` and `Rallyware-Data-SDK-Version` headers, JSON-LD IRI references in request bodies, no cookies. **No idempotency on any write.** See `conventions/rallyware-conventions.yml`.
+- Operations: 17 operations across identity, task programs, tasks, task units and badges. See `mcp/rallyware-mcp.yml`.
+- Data model: 17 entities and 4 enums (User, UserProfile, TaskProgram, Task, UserTask, UnitConfig, UnitResult, Badge, Kpi, Tag, ...). See `data-model/rallyware-data-model.yml`.
+- Errors: only HTTP 401 has defined semantics (single refresh-and-replay). No error reference, no problem+json. Failure is modelled as domain state — TaskFailReasonEnum, UnitResultStatusesEnum. See `errors/rallyware-problem-types.yml`.
+
+## Agent skills
+
+- [Authenticate against a Rallyware tenant and page a collection](skills/rallyware-authenticate-and-page.md)
+- [Drive a Rallyware task from assignment to completion](skills/rallyware-complete-a-task.md)
+
+## Embedded components
+
+Rallyware's distribution model for the field-user experience is embedding, not redirecting: ProgressTrackerWidget, UserInfoWidget, ProgramList, TaskProgram, TaskCardCarousel, TaskComponent, BadgesWidget, BadgesList, BadgeAchieversList, TermsAndConditions — all bound to a live tenant API service and themed through a global design-token service. See `components/rallyware-components.yml`.
 
 ## Company
+
 - [Rallyware](https://www.rallyware.com/): Peak performance for every rep, everywhere — AI sales performance orchestration.
-- [About Us](https://www.rallyware.com/about-us): Company overview.
-- [Enterprise Platform](https://www.rallyware.com/solutions/enterprise-platform): Core enterprise enablement platform with open APIs and connectors.
-- [Learning & Development](https://www.rallyware.com/solutions/learning-development): AI learning management system.
+- [About Us](https://www.rallyware.com/about-us)
+- [Enterprise Platform](https://www.rallyware.com/solutions/enterprise-platform): States "Open APIs and pre-built connectors for CRM, POS, WFM, inventory, HR, and enterprise systems" — with no link to any API documentation.
+- [Learning & Development](https://www.rallyware.com/solutions/learning-development)
+- [Myagi by Rallyware](https://www.rallyware.com/solutions/myagi-brand-training): Acquired brand-training product. Its former developer surface is retired — every myagi.com host now 301s to a Branch deep link.
 
 ## Resources
-- [Blog](https://www.rallyware.com/blog): Articles on sales performance, enablement, and workforce development.
-- [Webinars](https://www.rallyware.com/webinars): Recorded and live sessions.
-- [Customer Stories](https://www.rallyware.com/customer-stories): Case studies.
-- [Demo Request](https://www.rallyware.com/demo-request): Request a platform demo (enterprise onboarding path).
-- [Contact](https://www.rallyware.com/contact): Contact and support.
 
-## Security & Legal
-- [Security](https://www.rallyware.com/security): Security posture — SOC 2 certified, GDPR and CCPA compliant.
+- [Blog](https://www.rallyware.com/blog)
+- [Webinars](https://www.rallyware.com/webinars)
+- [Customer Stories](https://www.rallyware.com/customer-stories)
+- [Media Room](https://www.rallyware.com/media-room)
+- [Demo Request](https://www.rallyware.com/demo-request): The only commercial entry point. No pricing and no self-service signup are published.
+- [Contact](https://www.rallyware.com/contact)
+- [Careers](https://www.rallyware.com/careers)
+
+## Legal
+
 - [Privacy Policy](https://www.rallyware.com/privacy)
 - [Terms of Service](https://www.rallyware.com/terms)
 - [Whistleblower](https://www.rallyware.com/whistleblower)
 
-## Notes
-- No public developer portal, OpenAPI definition, or API reference is published; API access is provisioned to enterprise customers.
-- No public status page or /.well-known/ discovery documents were found (probed 2026-07-20).
+## Verified absences (probed 2026-08-14)
+
+- No OpenAPI/Swagger at any host: /openapi.json, /openapi.yaml, /swagger.json, /api-docs, /v1/openapi.json, /redoc all 404 on www.rallyware.com; /api/docs.json and /api/docs.jsonld unreachable on every tenant host tried.
+- No /.well-known/ surface at all — security.txt, openid-configuration, oauth-authorization-server, oauth-protected-resource, api-catalog, ai-plugin.json, agent-card.json and agent.json each return 404.
+- No llms.txt served by Rallyware. This file is generated by API Evangelist.
+- No MCP server, no A2A agent card, no GraphQL endpoint, no AsyncAPI, no documented webhooks, no gRPC/protobuf.
+- No public status page: status.rallyware.com exists but 302s to an AWS Cognito login for an internal ("rlw-internal") user pool.
+- docs.rallyware.com is a dangling CNAME to a Help Scout docs site that returns 404.
+- No pricing page, no self-service signup, no public Postman collection, no CLI, no sandbox, no dated changelog, no versioning or deprecation policy, no SLA, no published rate limits.

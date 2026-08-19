@@ -1,0 +1,27 @@
+generated: '2026-08-14'
+method: searched
+source: https://www.rallyware.com/
+plan_count: 0
+pricing_published: false
+pricing_url: null
+signup_url: null
+sales_gate: https://www.rallyware.com/demo-request
+plans: []
+note: >-
+  Rallyware publishes no pricing of any kind. There is no /pricing page (probed
+  2026-08-14, HTTP 404), no pricing entry in the site's page, solutions or
+  landing-page sitemaps, no plan tiers, no per-seat or per-user rate, and no
+  self-service signup — /login resolves only to the WordPress admin (wp-login.php,
+  HTTP 503) and there is no product sign-in on the marketing domain. The only
+  commercial entry point is a demo request form that routes to sales.
+  Recorded as an explicit zero rather than omitted: this is an enterprise
+  contact-us-only motion, which is a real, deliberate commercial posture, not
+  missing data.
+evidence:
+- url: https://www.rallyware.com/pricing
+  status: 404
+- url: https://www.rallyware.com/demo-request
+  status: 200
+- url: https://www.rallyware.com/sitemap_index.xml
+  status: 200
+  finding: no pricing page in any child sitemap

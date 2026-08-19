@@ -1,0 +1,27 @@
+generated: '2026-08-14'
+method: searched
+source: >-
+  https://www.rallyware.com/ and npm @rallyware/sdk-react-native-components@1.2.1
+limit_count: 0
+documented: false
+rate_limits: []
+response_headers: []
+exhaustion_status: unknown
+retry_after_supported: unknown
+note: >-
+  Rallyware documents no rate limits. There is no developer portal or API reference
+  to publish them in, and Rallyware's own first-party SDK contains no rate-limit
+  handling whatsoever: the axios response interceptor in
+  lib/module/services/rallyware-api-service.js branches only on HTTP 401, and there
+  is no read of X-RateLimit-*, RateLimit-* or Retry-After, and no backoff. A 429
+  would propagate to the caller unhandled by Rallyware's own client.
+  The SDK does default collection requests to items_per_page=1000, which implies the
+  server tolerates large page sizes, but that is a page-size default and not a
+  published limit — it is recorded here only so it is not mistaken for one.
+  An honest zero: nothing was observable, and nothing is asserted.
+evidence:
+- url: https://www.rallyware.com/
+  status: 200
+  finding: no developer documentation of any kind
+- source: "npm @rallyware/sdk-react-native-components@1.2.1"
+  finding: no rate-limit header handling or backoff in the first-party client

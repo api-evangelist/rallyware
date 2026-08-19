@@ -1,0 +1,65 @@
+generated: '2026-08-14'
+method: searched
+source: https://registry.npmjs.org/@rallyware/sdk-react-native-components
+note: >-
+  Registry sweep run 2026-08-14 across npm, PyPI, RubyGems, crates.io, Packagist,
+  NuGet, Maven Central and pkg.go.dev. Exactly one first-party Rallyware client
+  library is published: the React Native SDK on npm under the @rallyware scope.
+  Ownership confirmed three ways — the @rallyware npm scope, repository
+  github.com/rallyware/sdk-react-native-components, and npm author "rallyware".
+  Rallyware publishes no server-side SDK in any other language.
+
+packages:
+- language: javascript
+  registry: npm
+  name: "@rallyware/sdk-react-native-components"
+  url: https://www.npmjs.com/package/@rallyware/sdk-react-native-components
+  install: npm install @rallyware/sdk-react-native-components
+  official: true
+  version: 1.2.1
+  published: '2024-05-23'
+  first_published: '2022-05-02'
+  release_count: 54
+  license: ISC
+  repository: https://github.com/rallyware/sdk-react-native-components
+  description: >-
+    Rallyware SDK React Native components. Ships both the embeddable UI component
+    family (see components/rallyware-components.yml) and RallywareAPIService — the
+    first-party HTTP client for the Rallyware tenant API, including its OAuth2 auth
+    strategies. This package is the only public, machine-readable description of
+    the Rallyware API surface that Rallyware itself publishes.
+  peer_dependencies: [react, react-native]
+  note: >-
+    DECAY SIGNAL: latest release 1.2.1 is dated 2024-05-23 — approximately 27 months
+    stale as of this pass, against 54 releases published between 2022-05-02 and
+    2024-05-23. The repository github.com/rallyware/sdk-react-native-components is
+    not present in the public github.com/rallyware org listing (18 public repos, all
+    Terraform infrastructure modules), so the source is private or removed while the
+    npm artifact remains published.
+
+negative_results:
+- registry: npm
+  query: rallyware
+  finding: >-
+    Only one other package exists under the @rallyware scope — @rallyware/npm-test
+    1.0.0 (2022-04-28) — whose repository is github.com/yevhenii-zinchenko/npm-test.
+    It is a scope smoke-test, not a product SDK, and is excluded.
+- registry: pypi
+  query: rallyware
+  status: 404
+- registry: rubygems
+  query: rallyware
+  status: 404
+- registry: crates.io
+  query: rallyware
+  status: 403
+  note: crates.io blocked the unauthenticated probe; no Rallyware crate is known.
+- registry: npm
+  query: myagi
+  finding: >-
+    Myagi (acquired by Rallyware; marketed as "Myagi by Rallyware") published no
+    client SDK. The github.com/Myagi org carries 8 public repos, none of which is a
+    Myagi API client; python-rustici-engine-api wraps a THIRD-PARTY API (Rustici
+    Engine) and is not a Rallyware contract. All myagi.com hostnames — including
+    api.myagi.com and developers.myagi.com — now 301 to the Branch deep link
+    rallyware.app.link, so any former Myagi API surface is retired.

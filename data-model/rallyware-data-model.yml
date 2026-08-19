@@ -1,0 +1,404 @@
+generated: '2026-08-14'
+method: derived
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 —
+  lib/typescript/dto/*.d.ts and lib/typescript/enums/*.d.ts
+  (first-party TypeScript declarations published by Rallyware)
+note: >-
+  Entity-relationship graph of the Rallyware tenant API, derived from the typed DTOs
+  Rallyware ships in its own SDK. Because Rallyware publishes no OpenAPI, these
+  declarations are the authoritative public description of its resource shapes. Only
+  the fields and relationships present in the published types are recorded; nothing
+  is inferred. This graph covers the SDK-exposed slice of the platform (identity,
+  task programs, tasks, task units, badges, KPIs) — Rallyware's admin, analytics and
+  connector surfaces are not represented in the SDK and are therefore absent here.
+
+id_conventions:
+  primary_key: >-
+    Integer `id` on every resource except Badge.category, which is keyed by `uuid`.
+  external_key: >-
+    User carries `external_id` — the identifier from the customer's own system of
+    record (CRM/HRIS/distributor roster). It is the join key for enterprise
+    integration and has its own lookup route, GET /users/external/{id}.
+  iri_references: >-
+    Relationships are expressed as API paths in request bodies (JSON-LD IRIs), e.g.
+    user_task: "/api/user_tasks/{id}". See conventions/rallyware-conventions.yml.
+
+entities:
+
+- name: User
+  dto: UserDto
+  endpoints:
+  - GET /api/users/me
+  - "GET /users/external/{id}"
+  - "GET /api/badges/{badgeId}/users"
+  domain: identity
+  fields:
+    id: integer
+    external_id: string
+    identity: string
+    first_name: string
+    last_name: string
+    full_name: string
+    country_code: string
+    state_code: string
+    lang_code: string
+    timezone: string|null
+    avatar: string
+    cover: string
+    last_visit: string
+    online: boolean
+    approved: boolean
+    is_activated: boolean
+    is_email_verified: boolean
+    rules_agreed_at: string
+    expired_at: string|null
+    scores: integer
+    points: integer
+    greeting_text: string
+    track_id: string
+    conversation_url: string|null
+  relationships:
+  - type: has_one
+    target: UserLevel
+    via: level
+    nullable: true
+  - type: has_many
+    target: UserDataAttribute
+    via: user_data_attributes
+
+- name: UserProfile
+  dto: UserProfileDto
+  extends: User
+  endpoints: [GET /api/users/me/profile]
+  domain: identity
+  fields:
+    email: string
+    is_rules_agreed: boolean
+    assistant_icon: string
+    use_profile_picture: boolean
+    contact_card: object
+    deletion_requested_at: string|null
+  relationships:
+  - type: has_many
+    target: Kpi
+    via: kpi
+  note: >-
+    The privileged projection of User for the authenticated principal. Carries the
+    only PII fields in the model (email) and the GDPR erasure marker
+    (deletion_requested_at).
+
+- name: UserLevel
+  dto: UserLevelDto
+  domain: gamification
+  fields: {id: integer, title: string, color: string}
+  relationships:
+  - type: belongs_to
+    target: User
+    via: level
+
+- name: UserDataAttribute
+  dto: UserDataAttributeDto
+  domain: identity
+  fields:
+    name: string
+    title: string
+    type: string
+    value: string|null
+    is_public: boolean
+    isPublic: boolean
+  note: >-
+    The tenant-extensible custom-attribute bag — how a customer projects its own
+    distributor/employee fields onto the Rallyware user. Both snake_case `is_public`
+    and camelCase `isPublic` are declared on the same type, an inconsistency carried
+    in Rallyware's own published declarations.
+
+- name: Kpi
+  dto: KpiDto
+  domain: performance
+  fields: {value: string, type: string, icon: string, tooltip: string}
+  relationships:
+  - type: belongs_to
+    target: UserProfile
+    via: kpi
+  note: Values are typed as string, not numeric — formatting is server-side.
+
+- name: TaskProgram
+  dto: TaskProgramDto
+  endpoints:
+  - "GET /api/users/me/task_programs"
+  - "GET /api/task_programs/{id}"
+  domain: enablement
+  fields:
+    id: integer
+    title: string
+    description: string
+    cover: string
+    bookmarked: boolean
+    task_count: integer
+    completed_task_count: integer
+    completed_user_task_count: integer
+    not_failed_user_task_count: integer
+    created_at: string
+    updated_at: string
+  relationships:
+  - type: has_many
+    target: Task
+    via: task_count (aggregate; tasks fetched via /api/me/tasks_models)
+  note: >-
+    Progress is denormalized onto the program as four counters rather than computed
+    by the client — this is what the ProgressTrackerWidget renders.
+
+- name: Task
+  dto: TaskDto
+  endpoints: [GET /api/me/tasks_models]
+  domain: enablement
+  fields:
+    id: integer
+    title: string
+    summary: string|null
+    description: string
+    scores: integer
+    background: string
+    featured: boolean
+    available_since: string
+    available_until: string|null
+    comments_count: integer
+    show_unlocking_clues: boolean
+    unlocking_clues: string|null
+    action_titles: array of {key, title}
+    status_titles: array of {key, title}
+    created_at: string
+    updated_at: string
+  relationships:
+  - type: belongs_to
+    target: TaskProgram
+    via: task_program
+  - type: has_many
+    target: Tag
+    via: full_tags
+  note: >-
+    The template/catalogue side of the model — a Task is what MAY be done. Its
+    assigned, per-user instance is UserTask.
+
+- name: UserTask
+  dto: UserTaskDto
+  endpoints:
+  - GET /api/user_tasks/{id}
+  - PUT /api/user_tasks/{id}/start
+  - PUT /api/user_tasks/{id}/complete
+  domain: enablement
+  fields:
+    id: integer
+    title: string
+    summary: string|null
+    description: string
+    scores: integer
+    points_awarded: integer
+    due_date: string|null
+    status: UserTaskStatusesEnum
+    fail_reason: TaskFailReasonEnum
+    finished: boolean
+    state: string
+    button_type: string
+    button_text: string
+    background: string
+    featured: boolean
+    last_updated_date: string
+    history_records: array
+    action_titles: array of {key, title}
+    created_at: string
+    updated_at: string
+  relationships:
+  - type: has_one
+    target: Task
+    via: task
+  - type: belongs_to
+    target: TaskProgram
+    via: task_program
+  - type: has_many
+    target: Tag
+    via: full_tags
+  - type: has_many
+    target: UnitConfig
+    via: unit_configs
+    optional: true
+  - type: has_many
+    target: UnitResult
+    via: unit_results
+    optional: true
+  note: >-
+    The central assignment/execution entity — the join of a Task to a user with
+    lifecycle state, scoring and audit history. This is the resource the "next best
+    action" product is built on.
+
+- name: CombinedTask
+  dto: CombinedTaskDto
+  domain: enablement
+  shape: >-
+    Discriminated union — {type: 'Task', item: TaskDto} | {type: 'UserTask', item: UserTaskDto}
+  endpoints: [GET /api/me/tasks_models]
+  note: >-
+    A polymorphic feed: /api/me/tasks_models returns unassigned catalogue Tasks and
+    assigned UserTasks interleaved in one collection, discriminated by `type`.
+
+- name: UnitConfig
+  type_ref: types/unit-config.types
+  endpoints:
+  - "referenced as IRI /api/unit_configs/{id}"
+  domain: enablement
+  note: >-
+    The configuration of one step ("unit") inside a task — the form/lesson definition
+    the learner completes. Item types are enumerated by UnitReportItemTypesEnum.
+
+- name: UnitResult
+  dto: UnitResultOutputDto
+  endpoints:
+  - POST /api/unit_results/save_draft
+  - PUT /api/unit_results/{id}/save_draft
+  - POST /api/unit_results/submit
+  - PUT /api/unit_results/{id}/submit
+  domain: enablement
+  fields:
+    user_task: IRI string — /api/user_tasks/{id}
+    unit_config: IRI string — /api/unit_configs/{id}
+    data: UnitResultData
+  relationships:
+  - type: belongs_to
+    target: UserTask
+    via: user_task
+  - type: belongs_to
+    target: UnitConfig
+    via: unit_config
+  note: >-
+    Carries a draft/submit split — the same payload is saved with save_draft and
+    finalized with submit — and a review workflow via UnitResultStatusesEnum.
+
+- name: Badge
+  dto: BadgeDto
+  endpoints:
+  - "GET /api/badges"
+  - "GET /api/badges/{badgeId}/users"
+  domain: gamification
+  fields:
+    id: integer
+    title: string
+    subtitle: string
+    sort_order: integer
+    locked_description: string
+    locked_description_markdown: string
+    unlocked_description: string
+    unlocked_description_markdown: string
+    locked_image: string
+    unlocked_image: string
+    pdf_certificate_image: string
+    pdf_link: string|null
+    pdf_link_web: string|null
+    is_unlocked: boolean
+    unlocked_at: string|null
+    unlocked_at_formatted: string|null
+    show_people_who_unlocked_the_badge: boolean
+    is_deleting: boolean
+  relationships:
+  - type: has_one
+    target: TaskProgram
+    via: program (embedded {id, title, cover, created_at, updated_at})
+  - type: has_one
+    target: BadgeCategory
+    via: category (embedded {uuid, title})
+  - type: has_many
+    target: Tag
+    via: tags
+  - type: has_many
+    target: User
+    via: /api/badges/{badgeId}/users
+  note: >-
+    Descriptions are dual-encoded — an HTML field and a *_markdown twin for each of
+    locked/unlocked. is_deleting exposes an asynchronous soft-delete state to clients.
+
+- name: BadgeCategory
+  domain: gamification
+  fields: {uuid: string, title: string}
+  note: The only UUID-keyed entity in the published model.
+
+- name: Tag
+  dto: TagDto
+  domain: taxonomy
+  fields: {id: integer, title: string, sort_order: integer}
+  relationships:
+  - type: belongs_to
+    target: Task
+    via: full_tags
+  - type: belongs_to
+    target: UserTask
+    via: full_tags
+  - type: belongs_to
+    target: Badge
+    via: tags
+
+- name: PublicConfig
+  dto: PublicConfigDto
+  endpoints: [GET /api/public/config]
+  domain: tenant configuration
+  fields:
+    config.parameters: keyed map of tenant settings
+    config.assets.wysiwyg: rich-text editor asset bundle
+  known_parameter_keys:
+  - core.security.static_page.privacy_policy
+  - core.security.static_page.cookie_policy
+  - core.security.static_page.terms_of_service
+  note: >-
+    Anonymous, pre-auth tenant bootstrap document. Exposes the tenant's legal static
+    pages by well-known parameter key.
+
+- name: TranslationCatalog
+  dto: TranslationCatalogDto
+  endpoints:
+  - "GET /api/public/translation/catalogue/{langCode}"
+  domain: localization
+  shape: "{ domains: [ { messages: [...] } ] }"
+
+enums:
+- name: UserTaskStatusesEnum
+  values: [locked, available, in_progress, completed, failed]
+  note: >-
+    `locked` is annotated in Rallyware's own source as "synthetic status. I hope it
+    will be implemented one day" — it is computed client-side, not returned by the API.
+- name: TaskFailReasonEnum
+  values: [business_rule, expired, rejected, ""]
+- name: UnitResultStatusesEnum
+  values: [new, draft, in_review, rejected, approved]
+- name: UnitReportItemTypesEnum
+  values:
+  - text
+  - checkbox
+  - editor
+  - email
+  - phone_number
+  - date
+  - number
+  - positive_number
+  - url
+  - vertical_radiobutton_list
+  - checkbox_list
+  - file
+  - image
+  - video
+  - slider
+  - link
+
+domains:
+  identity: [User, UserProfile, UserDataAttribute, UserLevel]
+  enablement: [TaskProgram, Task, UserTask, CombinedTask, UnitConfig, UnitResult]
+  gamification: [Badge, BadgeCategory, UserLevel]
+  performance: [Kpi]
+  taxonomy: [Tag]
+  tenant: [PublicConfig, TranslationCatalog]
+
+coverage:
+  entities: 17
+  enums: 4
+  note: >-
+    Complete for the SDK-published surface. Rallyware's marketed connector surface
+    (CRM, POS, WFM, inventory, HR) and its admin/analytics APIs are not described in
+    any public artifact and are therefore not represented.

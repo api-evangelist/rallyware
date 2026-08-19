@@ -1,0 +1,41 @@
+generated: '2026-08-14'
+method: generated
+source: >-
+  Grounded in npm @rallyware/sdk-react-native-components@1.2.1, Rallyware's own
+  published React Native SDK — the only public, machine-readable description of the
+  Rallyware API. Operation labels are defined in mcp/rallyware-mcp.yml.
+note: >-
+  Rallyware publishes no OpenAPI, so these skills are grounded in verified call sites
+  in the provider's own published client library rather than in a spec. Every path,
+  method, header, enum value and field named in a skill was read from that package;
+  where a detail is not published (query-parameter names, error bodies, rate limits)
+  the skill says so explicitly rather than guessing.
+
+skills:
+- file: rallyware-authenticate-and-page.md
+  name: Authenticate against a Rallyware tenant and page a collection
+  summary: >-
+    OAuth2 password grant against a per-tenant host, the required Rallyware-Data-*
+    headers and _locale param, the single-replay 401 refresh contract, and the Hydra
+    hydra:next pagination walk.
+  api: mcp/rallyware-mcp.yml
+  operations: [getPublicConfig, getCurrentUser, getMyProfile, getUserByExternalId, listBadges, listBadgeAchievers, listMyTaskPrograms]
+
+- file: rallyware-complete-a-task.md
+  name: Drive a Rallyware task from assignment to completion
+  summary: >-
+    The core enablement loop — read the polymorphic Task/UserTask feed, start an
+    assignment, save and submit unit results by IRI reference, complete it. Includes
+    the retry-safety rules this API's lack of idempotency forces on a caller.
+  api: mcp/rallyware-mcp.yml
+  operations: [listMyTaskPrograms, getTaskProgram, listAvailableTasks, getUserTask, startUserTask, saveUnitResultDraft, submitUnitResult, completeUserTask]
+
+coverage:
+  skills: 2
+  operations_covered: 15
+  operations_total: 17
+  uncovered: [agreeRules, getTranslationCatalogue]
+  uncovered_note: >-
+    agreeRules is deliberately not given its own skill — it is a legal-consent action
+    that must not be automated, and is documented as a warning inside the task skill.
+    getTranslationCatalogue is a bulk localization fetch with no agent-facing flow.

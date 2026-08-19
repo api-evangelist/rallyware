@@ -1,0 +1,68 @@
+generated: '2026-08-14'
+method: probed
+source: live GET of /.well-known/* on every Rallyware host reachable from apis.yml
+host: https://www.rallyware.com
+
+summary:
+  documents_found: 0
+  outcome: >-
+    Rallyware serves no /.well-known/ discovery surface. Every path returns HTTP 404
+    rendered as the WordPress marketing 404 page (text/html, ~88 KB). Recorded as a
+    verified absence — no WellKnown and no SecurityTxt pointer is emitted, because a
+    404 on every path is not a document.
+
+documents:
+- path: /.well-known/security.txt
+  status: 404
+  content_type: text/html
+  note: >-
+    Absent even though Rallyware DOES run a bug bounty program and publishes
+    ops@rallyware.com as its vulnerability reporting address on
+    https://www.rallyware.com/security-2. Publishing an RFC 9116 security.txt that
+    names that address and the program page is the single cheapest fix available to
+    this provider — see security/rallyware-vulnerability-disclosure.yml.
+- path: /.well-known/openid-configuration
+  status: 404
+  content_type: text/html
+- path: /.well-known/oauth-authorization-server
+  status: 404
+  content_type: text/html
+  note: >-
+    The Rallyware tenant API does implement OAuth2 (password and refresh_token
+    grants at /oauth/v2/token — see authentication/rallyware-authentication.yml) but
+    publishes no RFC 8414 authorization-server metadata.
+- path: /.well-known/oauth-protected-resource
+  status: 404
+  content_type: text/html
+- path: /.well-known/api-catalog
+  status: 404
+  content_type: text/html
+- path: /.well-known/ai-plugin.json
+  status: 404
+  content_type: text/html
+- path: /.well-known/agent-card.json
+  status: 404
+  content_type: text/html
+- path: /.well-known/agent.json
+  status: 404
+  content_type: text/html
+- path: /llms.txt
+  status: 404
+  content_type: text/html
+
+other_hosts_probed:
+- host: status.rallyware.com
+  result: >-
+    Resolves and answers, but every path 302s to an AWS Cognito hosted login
+    (rlw-internal-odin.auth.eu-central-1.amazoncognito.com). Internal-only; no
+    anonymous discovery surface.
+- host: docs.rallyware.com
+  result: >-
+    CNAME to rallyware.helpscoutdocs.com; TLS handshake fails and the Help Scout
+    origin returns 404. A retired documentation host.
+- host: learn.rallyware.com
+  result: HTTP 404 on all probed paths (SPA shell, no /.well-known/).
+- host: go.rallyware.com
+  result: HTTP 403 (Cloudflare error 1034) on all probed paths.
+- host: myagi.com and all its subdomains
+  result: 301 to https://rallyware.app.link (Branch deep link catch-all).

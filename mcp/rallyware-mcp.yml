@@ -1,0 +1,244 @@
+generated: '2026-08-14'
+method: derived
+status: candidate
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 — lib/module/services/*.js
+  (first-party, published by Rallyware)
+
+deployment:
+  mode: none
+  endpoint: null
+  install: null
+  package: null
+  auth: oauth
+  verified: derived
+
+note: >-
+  Rallyware ships NO MCP server. Searched the MCP registry, npm (@modelcontextprotocol
+  and @rallyware scopes), the github.com/rallyware and github.com/Myagi orgs, and
+  every Rallyware web property on 2026-08-14 — nothing. This file is a DERIVED
+  CANDIDATE tool set, not a published agent surface: it maps the operations that
+  Rallyware's own React Native SDK actually calls, so that the shape of a future
+  Rallyware MCP server is on record. No endpoint is asserted and none may be guessed.
+  Every operation below was read out of the published SDK source; the `operation`
+  ids are labels this pipeline assigned (Rallyware publishes no OpenAPI and therefore
+  no operationIds of its own) and are used consistently across the artifacts in this
+  repo.
+
+server:
+  name: rallyware
+  transport: null
+  url: null
+  published: false
+
+prerequisites:
+  description: >-
+    Anything built against this surface must solve three problems that Rallyware's
+    current API design creates for agents.
+  items:
+  - id: per-tenant-host
+    detail: >-
+      There is no shared api.rallyware.com. The host is a required per-customer
+      parameter (https://{tenant}.rallyware.com or a customer-branded domain), so any
+      server must take the tenant host as configuration.
+  - id: password-grant-only
+    detail: >-
+      The only published grants are OAuth2 resource-owner password credentials and
+      refresh_token. An agent would have to hold end-user credentials — there is no
+      client_credentials grant and no scoped, delegable token.
+  - id: user-scoped-only
+    detail: >-
+      Every operation is scoped to the authenticated end user (/api/users/me,
+      /api/me/tasks_models). There is no published tenant-admin or bulk surface.
+
+tools:
+
+- name: get_current_user
+  description: Get the authenticated user's core identity, level and custom attributes.
+  operation: getCurrentUser
+  method: GET
+  path: /api/users/me
+  auth: bearer
+  returns: User
+  source_service: lib/module/services/user-service.js#fetchCurrentUser
+
+- name: get_my_profile
+  description: >-
+    Get the authenticated user's extended profile — email, KPI values, rules-acceptance
+    state and GDPR deletion marker.
+  operation: getMyProfile
+  method: GET
+  path: /api/users/me/profile
+  auth: bearer
+  returns: UserProfile
+  source_service: lib/module/services/user-service.js#fetchMyProfileData
+  consequence: read
+  note: Returns PII (email). An agent surface would need this gated.
+
+- name: get_user_by_external_id
+  description: >-
+    Look up a user by the identifier from the customer's own system of record. The
+    join key for enterprise integration.
+  operation: getUserByExternalId
+  method: GET
+  path: /users/external/{id}
+  auth: bearer
+  returns: User
+  source_service: lib/module/services/user-service.js#fetchOneByExternalId
+  note: >-
+    The only published path that is NOT under the /api prefix — recorded verbatim as
+    the SDK calls it.
+
+- name: agree_rules
+  description: Record the authenticated user's acceptance of the tenant terms and conditions.
+  operation: agreeRules
+  method: POST
+  path: /api/users/me/rules_agree
+  auth: bearer
+  consequence: write
+  source_service: lib/module/services/user-service.js#agreeRules
+  note: >-
+    A legal-consent action. Should never be exposed to an autonomous agent without a
+    human in the loop.
+
+- name: list_my_task_programs
+  description: List the task programs available to the authenticated user, with progress counters.
+  operation: listMyTaskPrograms
+  method: GET
+  path: /api/users/me/task_programs
+  auth: bearer
+  params: {items_per_page: integer}
+  returns: Hydra collection of TaskProgram
+  source_service: lib/module/services/task-program-service.js#fetchAvailableTaskProgramCollection
+
+- name: get_task_program
+  description: Get one task program by id.
+  operation: getTaskProgram
+  method: GET
+  path: /api/task_programs/{id}
+  auth: bearer
+  returns: TaskProgram
+  source_service: lib/module/services/task-program-service.js#fetchTaskProgram
+
+- name: list_available_tasks
+  description: >-
+    List the authenticated user's task feed — catalogue Tasks and assigned UserTasks
+    interleaved in one polymorphic collection.
+  operation: listAvailableTasks
+  method: GET
+  path: /api/me/tasks_models
+  auth: bearer
+  params:
+    items_per_page: integer
+    status: "UserTaskStatusesEnum[]"
+    taskProgramId: integer
+    featured: boolean
+  params_note: >-
+    Query parameter names are not published; the SDK forwards an opaque params object
+    and the component layer exposes showLockedTasks / showOnlyFeatured / taskProgramId
+    / status. Recorded at low confidence.
+  returns: Hydra collection of CombinedTask
+  source_service: lib/module/services/task-service.js#fetchAvailableTasks
+
+- name: get_user_task
+  description: Get one assigned task instance, including its unit configs and results.
+  operation: getUserTask
+  method: GET
+  path: /api/user_tasks/{userTaskId}
+  auth: bearer
+  returns: UserTask
+  source_service: lib/module/services/task-service.js#fetchUserTask
+
+- name: start_user_task
+  description: Move an assigned task into in_progress.
+  operation: startUserTask
+  method: PUT
+  path: /api/user_tasks/{userTaskId}/start
+  auth: bearer
+  consequence: write
+  returns: UserTask
+  source_service: lib/module/services/task-service.js#startTask
+
+- name: save_unit_result_draft
+  description: Save an in-progress draft of a task unit's answers without submitting it.
+  operation: saveUnitResultDraft
+  method: POST or PUT
+  path: /api/unit_results/save_draft (create) | /api/unit_results/{unitResultId}/save_draft (update)
+  auth: bearer
+  consequence: write
+  request_body:
+    user_task: "IRI — /api/user_tasks/{id}"
+    unit_config: "IRI — /api/unit_configs/{id}"
+    data: UnitResultData
+  source_service: lib/module/services/task-service.js#saveUnitDraft
+
+- name: submit_unit_result
+  description: Submit a task unit's answers for review.
+  operation: submitUnitResult
+  method: POST or PUT
+  path: /api/unit_results/submit (create) | /api/unit_results/{unitResultId}/submit (update)
+  auth: bearer
+  consequence: write
+  request_body:
+    user_task: "IRI — /api/user_tasks/{id}"
+    unit_config: "IRI — /api/unit_configs/{id}"
+    data: UnitResultData
+  source_service: lib/module/services/task-service.js#submitTaskUnit
+  note: >-
+    Not idempotent and carries no dedupe key — see conventions/rallyware-conventions.yml.
+
+- name: complete_user_task
+  description: Mark an assigned task complete and award its points.
+  operation: completeUserTask
+  method: PUT
+  path: /api/user_tasks/{userTaskId}/complete
+  auth: bearer
+  consequence: write
+  returns: UserTask
+  source_service: lib/module/services/task-service.js#completeTask
+
+- name: list_badges
+  description: List all badges available to the user, locked and unlocked, paginated.
+  operation: listBadges
+  method: GET
+  path: /api/badges
+  auth: bearer
+  returns: Hydra collection of Badge
+  source_service: lib/module/services/badge-service.js#fetchBadgeCollection
+
+- name: list_badge_achievers
+  description: List the users who have earned a given badge, paginated.
+  operation: listBadgeAchievers
+  method: GET
+  path: /api/badges/{badgeId}/users
+  auth: bearer
+  returns: Hydra collection of User
+  source_service: lib/module/services/badge-service.js#fetchBadgeUsersCollection
+
+- name: get_public_config
+  description: >-
+    Get the tenant bootstrap configuration — settings map, WYSIWYG assets and the
+    tenant's legal static pages.
+  operation: getPublicConfig
+  method: GET
+  path: /api/public/config
+  auth: none
+  source_service: lib/module/services/config-service.js#fetchPublicConfig
+
+- name: get_translation_catalogue
+  description: Get the tenant's full translation catalogue for a language code.
+  operation: getTranslationCatalogue
+  method: GET
+  path: /api/public/translation/catalogue/{langCode}
+  auth: none
+  source_service: lib/module/services/translation-service.js#fetchTranslations
+
+coverage:
+  tools: 17
+  read: 11
+  write: 6
+  anonymous: 2
+  source_confidence: >-
+    high on method + path + auth (read directly from published SDK call sites);
+    low on query-parameter names and response schemas beyond the published DTOs,
+    because Rallyware publishes no OpenAPI to confirm them.

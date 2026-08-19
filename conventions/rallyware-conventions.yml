@@ -1,0 +1,161 @@
+generated: '2026-08-14'
+method: derived
+source: >-
+  npm @rallyware/sdk-react-native-components@1.2.1 — lib/module/services/*.js,
+  lib/module/models/collection-response.js (first-party, published by Rallyware)
+note: >-
+  Cross-cutting request/response semantics of the Rallyware tenant API, read out of
+  Rallyware's own published SDK. Rallyware publishes no API reference, so this
+  artifact and authentication/ are the only structured description of how the API
+  behaves that exists in public.
+
+base_url:
+  form: https://{tenant}.rallyware.com
+  templated: true
+  note: >-
+    Rallyware is deployed one tenant per host. The SDK requires the host as its first
+    constructor argument and throws "host is required and should be a string" when it
+    is absent. Tenants run either on a rallyware.com subdomain or on a
+    customer-branded domain — the SDK README shows both
+    (https://feature-frontend.rallyware.com and https://testlearningcenter.nuskin.com,
+    a Rallyware-hosted Nu Skin instance). There is no single shared api.rallyware.com.
+  api_path_prefix: /api
+  auth_path_prefix: /oauth/v2
+
+authentication:
+  style: OAuth2 bearer token
+  header: "Authorization: Bearer {access_token}"
+  detail: authentication/rallyware-authentication.yml
+
+media_type:
+  request: application/json
+  response: application/json
+  hypermedia: >-
+    Collection responses are JSON-LD / Hydra Core documents. This is the fingerprint
+    of API Platform (Symfony); see conformance/rallyware-conformance.yml.
+
+pagination:
+  style: hypermedia cursor (Hydra)
+  request_params:
+  - name: items_per_page
+    in: query
+    default_used_by_sdk: 1000
+    note: >-
+      The SDK's fetchCollection defaults to items_per_page=1000, and TaskProgramService
+      passes items_per_page=programsCount (default 100). No published maximum.
+  response_fields:
+  - field: "hydra:member"
+    meaning: the array of items on this page
+  - field: "hydra:view.hydra:next"
+    meaning: absolute/relative URL of the next page, or absent on the last page
+  - field: "hydra:totalItems"
+    meaning: total number of items across all pages
+  client_pattern: >-
+    Follow hydra:view.hydra:next until it is absent. The SDK's BadgeService and
+    BadgeAchieversList/BadgesList components implement infinite scroll exactly this
+    way, re-calling fetchCollection with the returned nextPageUrl.
+  source: lib/module/models/collection-response.js
+
+localization:
+  param: _locale
+  in: query
+  applied: globally, on every request via the axios default params
+  values: BCP-47-style short language codes; 'en' is the SDK default
+  catalogue_endpoint: GET /api/public/translation/catalogue/{langCode}
+  catalogue_shape: >-
+    { domains: [ { messages: [...] } ] } — message keys support %param% interpolation
+    and Symfony-style pluralization ranges ({n}form|]n,Inf[form).
+  note: >-
+    Localization is a first-class API concern here, not a client concern: the API
+    ships the entire translation catalogue to the client and every response is
+    locale-negotiated by query parameter rather than by Accept-Language.
+
+client_identification:
+  description: >-
+    Rallyware requires callers to identify their client platform and SDK version on
+    every request. These are non-standard, Rallyware-specific request headers.
+  headers:
+  - name: Rallyware-Data-Client-Device-Platform
+    value_used_by_sdk: SDK
+  - name: Rallyware-Data-SDK-Version
+    value_used_by_sdk: "1.2.1"
+    note: bound to RallywareAPIService.SDK_VERSION
+
+resource_linking:
+  style: IRI references (JSON-LD)
+  description: >-
+    Related resources are referenced by their API path, not by a bare numeric id, in
+    request bodies. Submitting a unit result POSTs
+    { user_task: "/api/user_tasks/{id}", unit_config: "/api/unit_configs/{id}", data: {...} }.
+  source: lib/module/services/task-service.js
+
+cookies:
+  used: false
+  note: >-
+    The SDK sets withCredentials: false with the explicit comment "use
+    withCredentials: false to avoid setting cookies (which breaks auth flow)". The
+    API is token-authenticated only; cookie-based session auth interferes with it.
+
+idempotency:
+  supported: false
+  evidence: >-
+    No Idempotency-Key header, no idempotency parameter, and no retry-safety contract
+    appears anywhere in the published SDK or on any Rallyware page. State-changing
+    calls (PUT /api/user_tasks/{id}/start, PUT /api/user_tasks/{id}/complete,
+    POST /api/unit_results/submit) carry no client-supplied dedupe key. The only
+    automatic retry in the SDK is the single 401 refresh-and-replay, which replays
+    the original request verbatim with no idempotency protection.
+  note: >-
+    Recorded as an explicit negative. No Idempotency pointer is emitted in apis.yml,
+    because the provider has no idempotency contract to point at.
+
+versioning:
+  api: unversioned
+  detail: >-
+    Resource paths carry no version segment (/api/users/me, /api/badges,
+    /api/user_tasks/{id}). The only versioned path is the OAuth token endpoint,
+    /oauth/v2/token, which versions the auth bundle rather than the API.
+  client_versioning: >-
+    Version negotiation, such as it is, happens through the
+    Rallyware-Data-SDK-Version request header rather than through the URL, a media
+    type, or a date header.
+  detail_artifact: lifecycle/rallyware-lifecycle.yml
+
+error_envelope:
+  documented: false
+  observed_handling: >-
+    The SDK logs error.response.data on failure and branches only on
+    error.response.status === 401. No problem+json, no error-code registry, and no
+    documented error body shape were found.
+  detail_artifact: errors/rallyware-problem-types.yml
+
+rate_limit_signaling:
+  documented: false
+  headers: []
+  detail_artifact: rate-limits/rallyware-rate-limits.yml
+  note: >-
+    No X-RateLimit-*, RateLimit-* or Retry-After handling exists in the SDK, and no
+    limits are published. A 429 would fall through the SDK's interceptor unhandled.
+
+request_tracing:
+  request_id_header: none observed
+  note: >-
+    No correlation/request-id header is set or read by the SDK, and none is
+    documented. There is a track_id field on the User resource, but it is a
+    behavioural analytics identifier on the user, not a per-request trace id.
+
+field_expansion:
+  supported: partially, by server-side embedding
+  note: >-
+    Rallyware embeds related resources into responses by default rather than
+    exposing an expand/include parameter — UserTask embeds the full Task and
+    TaskProgram, Badge embeds its program and category, User embeds level and
+    user_data_attributes. No sparse-fieldset or expansion parameter is published.
+
+cross_links:
+  authentication: authentication/rallyware-authentication.yml
+  data_model: data-model/rallyware-data-model.yml
+  errors: errors/rallyware-problem-types.yml
+  lifecycle: lifecycle/rallyware-lifecycle.yml
+  rate_limits: rate-limits/rallyware-rate-limits.yml
+  conformance: conformance/rallyware-conformance.yml
