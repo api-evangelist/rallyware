@@ -12,6 +12,17 @@ description: >-
   description of that API is Rallyware's own React Native SDK on npm, which ships the API client, its
   OAuth2 auth strategies, and an embeddable component library; the artifacts in this repository are
   derived from it.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 accessModel:
   pricing: unknown
   onboarding: unknown
