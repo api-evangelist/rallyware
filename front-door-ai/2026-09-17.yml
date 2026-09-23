@@ -1,0 +1,29 @@
+# Front Door AI Index — rallyware — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: rallyware
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: www.rallyware.com
+  final_host: www.rallyware.com
+  ownership: own
+  owner: rallyware
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 19
+  host_score: 19
+  density: 21.59
+  words: 880
+  tiers:
+    agentic: 2
+    core: 17
+    model: 0
+  ambiguous: 6
+  top_terms:
+    AI: 16
+    intelligence: 5
+    agentic: 2
+    machine learning: 1
+    predictive: 1
